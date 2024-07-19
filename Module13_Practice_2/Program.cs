@@ -5,7 +5,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using static System.Net.Mime.MediaTypeNames;
 
-namespace Module13_Practice_2
+namespace TopWords
 {
     public class Program
     {
@@ -18,7 +18,9 @@ namespace Module13_Practice_2
         }
         public static List<string> StrToListOfWords(string text)
         {
-            return new List<string>(text.Split(' ', '\n', '\t'));
+            var list = new List<string>(text.Split(' ', '\n', '\t'));
+            list.RemoveAll(x => string.IsNullOrWhiteSpace(x));
+            return list;
         }
         public static Dictionary<string, int> CreateDictionary(IList<string> list)
         {
@@ -31,14 +33,17 @@ namespace Module13_Practice_2
             dict.Remove(string.Empty);
             return dict;
         }
-        public static string[] GetMaxWordsFromDictionary(IDictionary<string, int> dict)
+        public static Dictionary<string, int> GetMaxWordsFromDictionary(IDictionary<string, int> dict, int wordsCount)
         {
-            string[] topWords = new string[10];
+            Dictionary<string, int> topWords = new Dictionary<string, int>();
             string str = string.Empty;
-            for (int i = 0; i < topWords.Length; ++i)
+            KeyValuePair<string, int> keyValuePair;
+
+            for (int i = 0; i < wordsCount; ++i)
             {
-                topWords[i] = dict.MaxBy(x => x.Value).Key;
-                dict.Remove(topWords[i]);
+                keyValuePair = dict.MaxBy(x => x.Value);
+                topWords.Add(keyValuePair.Key, keyValuePair.Value);
+                dict.Remove(keyValuePair.Key);
             }
             return topWords;
         }
@@ -50,15 +55,35 @@ namespace Module13_Practice_2
         }
         static void Main(string[] args)
         {
-            string path = "C:\\Users\\Никита\\source\\repos\\Module13_Practice_2\\Module13_Practice_2\\bin\\Debug\\net7.0\\Text1.txt";
-            //path = Console.ReadLine();
+            int wordsCount;
+            Console.WriteLine("Это программа для поиска наиболее встречаемых слов в тексте. Работает с текстовыми файлами" +
+                "\nПрограмма посчитает количество слов и выведет самые популярные из них" +
+                "\nСколько слов вывести в отчет?");
+            do
+            {
+                wordsCount = 0;
+                Console.WriteLine("Количество слов: ");
+                if (Int32.TryParse(Console.ReadLine(), out wordsCount) == false || wordsCount <= 0)
+                    Console.WriteLine("Не является числом или неверное значение.");
+                else break;
+            } while (true);
+
+            string path = "";
+            do
+            {
+                Console.WriteLine($"Путь к файлу, в котором {wordsCount} самых встречаемых слов будет выведено: ");
+                path = Console.ReadLine();
+                if (File.Exists(path)) break;
+                else Console.WriteLine("Файл не найден. Попробуйте еще раз.");
+            } while (true);
+
             string text = GetAllTextFromFile(path);
 
             List<string> list = StrToListOfWords(text);
 
             Dictionary<string, int> dict = CreateDictionary(list);
 
-            string[] topWords = GetMaxWordsFromDictionary(dict);
+            Dictionary<string, int> topWords = GetMaxWordsFromDictionary(dict, wordsCount);
 
             DisplayCollection(topWords);
             Console.ReadKey();
